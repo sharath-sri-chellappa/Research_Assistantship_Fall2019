@@ -1,7 +1,5 @@
 package com.example.blockchain;
 
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -10,12 +8,8 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
-import android.widget.Toast;
 
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-
-import static java.lang.Thread.sleep;
+import androidx.appcompat.app.AppCompatActivity;
 
 class updateTextView extends AsyncTask<String, String, Void> {
     StringBuilder useroutput = new StringBuilder();
@@ -70,27 +64,7 @@ public class MainActivity extends AppCompatActivity {
                 System.out.println("Blockchain valid ? " + blockchain.isBlockChainValid());
                 log.append("Blockchain valid ? " + blockchain.isBlockChainValid() + "\n");
                 System.out.println(blockchain);
-                // log.append(blockchain + "\n");
-
-                /*
-                // add an invalid block to corrupt Blockchain
-                Block latestblock = blockchain.latestBlock();
-                Block rogueblock = new Block(11, System.currentTimeMillis(),"aabbbabba", "Rogue Block");
-                Boolean secondactivity = blockchain.addBlock(rogueblock);
-                log.append("\nNew Block to be added\n" + rogueblock);
-
-                // Boolean secondactivity = blockchain.isBlockChainValid();
-
-                System.out.println("Blockchain valid ? " + blockchain.isBlockChainValid());
-                log.append("\nBlockchain valid ? " + blockchain.isBlockChainValid() + "\n");
-                */
-
                 log.append("\nBlockchain at the end is " + blockchain + "\n");
-                try {
-                    sleep(8000);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                }
                 if (secondactivity == true) {
                     Intent in = new Intent(MainActivity.this, SecondActivity.class);
                     startActivity(in);

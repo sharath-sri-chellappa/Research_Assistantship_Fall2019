@@ -2,10 +2,7 @@ package com.example.blockchain_ticketing;
 
 import android.content.Intent;
 import android.graphics.Bitmap;
-// import android.support.v4.app.Fragment;
-import android.net.wifi.WifiManager;
 import android.os.Bundle;
-import android.text.format.Formatter;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -19,33 +16,21 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.zxing.BarcodeFormat;
 import com.google.zxing.MultiFormatWriter;
 import com.google.zxing.WriterException;
 import com.google.zxing.common.BitMatrix;
 import com.journeyapps.barcodescanner.BarcodeEncoder;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.ObjectInputStream;
-import java.io.PrintWriter;
 import java.net.InetAddress;
-import java.net.InetSocketAddress;
 import java.net.NetworkInterface;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.nio.channels.SelectionKey;
-import java.nio.channels.Selector;
-import java.nio.channels.ServerSocketChannel;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 
 import androidx.fragment.app.Fragment;
 
 import static android.content.ContentValues.TAG;
-import static android.content.Context.WIFI_SERVICE;
 
 /**
  * A placeholder fragment containing a simple view.
@@ -97,8 +82,6 @@ public class MainActivityFragment extends Fragment{
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference("Latest Hash");
         final String ip = getIPAddress(true);
-        Intent intent=new Intent(getContext().getApplicationContext(),MyService.class);
-        getContext().startService(intent);
         // Read from the database
         myRef.addValueEventListener(new ValueEventListener() {
             @Override
@@ -116,6 +99,7 @@ public class MainActivityFragment extends Fragment{
                 } catch (WriterException e) {
                     e.printStackTrace();
                 }
+                FirebaseMessaging.getInstance().subscribeToTopic("/topics/blockchain");
             }
 
             @Override
