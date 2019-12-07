@@ -22,6 +22,15 @@ public class Block {
         hash = Block.calculateHash(this);
     }
 
+    public Block(int index, long timestamp, String previousHash, String hash, String data) {
+        this.index = index;
+        this.timestamp = timestamp;
+        this.previousHash = previousHash;
+        this.data = data;
+        this.nonce = nonce;
+        this.hash = hash;
+    }
+
     public int getIndex() {
         return index;
     }
@@ -40,6 +49,10 @@ public class Block {
 
     public String getData() {
         return data;
+    }
+
+    public int getNonce() {
+        return nonce;
     }
 
     public String str() {

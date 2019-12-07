@@ -9,6 +9,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 
+import com.google.firebase.database.DatabaseReference;
+import com.google.firebase.database.FirebaseDatabase;
+
 import androidx.appcompat.app.AppCompatActivity;
 
 class updateTextView extends AsyncTask<String, String, Void> {
@@ -31,8 +34,9 @@ public class MainActivity extends AppCompatActivity {
     private Button closeButton;
     public static Blockchain blockchain = new Blockchain(4);
     private TextView txtView;
-    private EditText hashInput;
     StringBuilder log=new StringBuilder();
+    FirebaseDatabase database = FirebaseDatabase.getInstance();
+    DatabaseReference myRef = database.getReference("blockchain");
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -44,7 +48,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v) {
                 txtView = (TextView) findViewById(R.id.txtView);
-                hashInput = (EditText) findViewById(R.id.HashInput);
                 txtView.setText("Sharath... It's working");
                 txtView.setMovementMethod(new ScrollingMovementMethod());
                 blockchain.addBlock(blockchain.newBlock("Block 1"));
@@ -65,6 +68,11 @@ public class MainActivity extends AppCompatActivity {
                 log.append("Blockchain valid ? " + blockchain.isBlockChainValid() + "\n");
                 System.out.println(blockchain);
                 log.append("\nBlockchain at the end is " + blockchain + "\n");
+                myRef.child("index").setValue(blockchain.latestBlock().index);
+                myRef.child("timestamp").setValue(blockchain.latestBlock().timestamp);
+                myRef.child("previous_hash").setValue(blockchain.latestBlock().previousHash);
+                myRef.child("current_hash").setValue(blockchain.latestBlock().hash);
+                myRef.child("data").setValue(blockchain.latestBlock().data);
                 if (secondactivity == true) {
                     Intent in = new Intent(MainActivity.this, SecondActivity.class);
                     startActivity(in);

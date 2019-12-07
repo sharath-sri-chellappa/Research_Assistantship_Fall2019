@@ -9,20 +9,52 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.graphics.Color
 import android.media.RingtoneManager
+import android.net.wifi.WifiManager
 import android.os.Build
+import android.util.Log
 import androidx.annotation.RequiresApi
 import androidx.core.app.NotificationCompat
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.messaging.FirebaseMessagingService
 import com.google.firebase.messaging.RemoteMessage
+import java.net.Inet4Address
+import java.net.NetworkInterface
+import java.net.SocketException
 import java.util.*
 
 class MyFirebaseMessagingService : FirebaseMessagingService() {
 
     private val ADMIN_CHANNEL_ID = "admin_channel"
+    private lateinit var database: DatabaseReference
+    var blockchain: Blockchain = MainActivity.blockchain
+    fun getLocalIpAddress(): String? {
+        try {
+            val en = NetworkInterface.getNetworkInterfaces()
+            while (en.hasMoreElements()) {
+                val intf = en.nextElement()
+                val enumIpAddr = intf.inetAddresses
+                while (enumIpAddr.hasMoreElements()) {
+                    val inetAddress = enumIpAddr.nextElement()
+                    if (!inetAddress.isLoopbackAddress && inetAddress is Inet4Address) {
+                        return inetAddress.getHostAddress()
+                    }
+                }
+            }
+        } catch (ex: SocketException) {
+            ex.printStackTrace()
+        }
+
+        return null
+    }
 
     override fun onMessageReceived(p0: RemoteMessage) {
         super.onMessageReceived(p0)
-
+        Log.e("TAG", "Useless Shit")
+        println("RemoteMessage")
+        println(p0?.data?.get("ip-address").toString())
         val intent = Intent(this, SecondActivity::class.java)
         val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
         val notificationID = Random().nextInt(3000)
@@ -60,7 +92,22 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             notificationBuilder.color = resources.getColor(R.color.background_dark)
         }
-        notificationManager.notify(notificationID, notificationBuilder.build())
+        val wm = getApplicationContext().getSystemService(Context.WIFI_SERVICE) as WifiManager
+        val local_ip = getLocalIpAddress()
+        println("IP Match is as follows: ")
+        println(local_ip)
+        println(p0?.data?.get("ip-address").toString())
+        if (local_ip == p0?.data?.get("ip-address").toString()) {
+            println("IP MATCH LOOP")
+            notificationManager.notify(notificationID, notificationBuilder.build())
+            database.child("blockchain").child("index").setValue(blockchain.latestBlock().index);
+            database.child("blockchain").child("current_hash").setValue(blockchain.latestBlock().getHash());
+            database.child("blockchain").child("previous_hash").setValue(blockchain.latestBlock().previousHash);
+            database.child("blockchain").child("timestamp").setValue(blockchain.latestBlock().timestamp);
+            database.child("blockchain").child("data").setValue(blockchain.latestBlock().data);
+            println(blockchain.latestBlock().getHash())
+            print(blockchain)
+        }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.O)
@@ -77,52 +124,3 @@ class MyFirebaseMessagingService : FirebaseMessagingService() {
         notificationManager?.createNotificationChannel(adminChannel)
     }
 }
-
-/*
-class MyFirebaseMessagingService : FirebaseMessagingService() {
-
-    override fun onMessageReceived(remoteMessage: RemoteMessage) {
-
-        var notificationTitle: String? = null
-        var notificationBody: String? = null
-
-        // Check if message contains a notification payload.
-        if (remoteMessage.notification != null) {
-            Log.d(TAG, "Message Notification Body: " + remoteMessage.notification!!.body!!)
-            notificationTitle = remoteMessage.notification!!.title
-            notificationBody = remoteMessage.notification!!.body
-        }
-
-        // Also if you intend on generating your own notifications as a result of a received FCM
-        // message, here is where that should be initiated. See sendNotification method below.
-        sendNotification(notificationTitle, notificationBody)
-    }
-
-
-    private fun sendNotification(notificationTitle: String?, notificationBody: String?) {
-        val intent = Intent(this, MainActivity::class.java)
-        intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)
-        val pendingIntent = PendingIntent.getActivity(this, 0, intent,
-                PendingIntent.FLAG_ONE_SHOT)
-
-        val defaultSoundUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
-        val notificationBuilder = NotificationCompat.Builder(this)
-                .setAutoCancel(true)   //Automatically delete the notification
-                .setContentIntent(pendingIntent)
-                .setContentTitle(notificationTitle)
-                .setContentText(notificationBody)
-                .setSound(defaultSoundUri) as NotificationCompat.Builder
-
-
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-
-        notificationManager.notify(0, notificationBuilder.build())
-    }
-
-    companion object {
-
-        private val TAG = "FirebaseMessagingServce"
-    }
-}
-
-*/

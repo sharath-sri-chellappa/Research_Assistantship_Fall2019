@@ -75,9 +75,7 @@ public class MainActivityFragment extends Fragment{
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState) {
         View view= inflater.inflate(R.layout.fragment_main, container, false);
-        generate_QRCode=(Button)view.findViewById(R.id.generate_qr);
         qrCode=(ImageView)view.findViewById(R.id.imageView);
-        mEditText=(EditText)view.findViewById(R.id.editText);
         // Write a message to the database
         FirebaseDatabase database = FirebaseDatabase.getInstance();
         DatabaseReference myRef = database.getReference("Latest Hash");

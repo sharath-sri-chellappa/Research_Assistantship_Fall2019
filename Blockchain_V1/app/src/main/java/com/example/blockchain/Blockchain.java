@@ -8,8 +8,8 @@ import java.util.List;
 
 public class Blockchain {
 
-    private int difficulty;
-    private List<Block> blocks;
+    public int difficulty;
+    public List<Block> blocks;
 
     public Blockchain(int difficulty) {
         this.difficulty = difficulty;
@@ -18,6 +18,11 @@ public class Blockchain {
         Block b = new Block(0, System.currentTimeMillis(), null, "First Block");
         b.mineBlock(difficulty);
         blocks.add(b);
+    }
+
+    public Blockchain(int difficulty, List<Block> blocks) {
+        this.difficulty = difficulty;
+        this.blocks = blocks;
     }
 
     public int getDifficulty() {
@@ -61,11 +66,13 @@ public class Blockchain {
         }
 
         if (firstBlock.getPreviousHash() != null) {
+            System.out.println("First block hash is screwed up");
             return false;
         }
 
         if (firstBlock.getHash() == null ||
                 !Block.calculateHash(firstBlock).equals(firstBlock.getHash())) {
+            System.out.println("First block hash is screwed up");
             return false;
         }
 
@@ -75,16 +82,23 @@ public class Blockchain {
     public boolean isValidNewBlock(Block newBlock, Block previousBlock) {
         if (newBlock != null  &&  previousBlock != null) {
             if (previousBlock.getIndex() + 1 != newBlock.getIndex()) {
+                System.out.println("Index is not matched in new block");
                 return false;
             }
 
             if (newBlock.getPreviousHash() == null  ||
                     !newBlock.getPreviousHash().equals(previousBlock.getHash())) {
+                System.out.println("Block's previous hash " + newBlock.getPreviousHash());
+                System.out.println("Previous block hash " + previousBlock.getHash());
+                System.out.println("Previous hash is not matched in new block");
                 return false;
             }
 
             if (newBlock.getHash() == null  ||
                     !Block.calculateHash(newBlock).equals(newBlock.getHash())) {
+                System.out.println("New Hash is not matched in new block");
+                System.out.println("New block's hash "+newBlock.getHash());
+                System.out.println("Calculated hash "+Block.calculateHash(newBlock));
                 return false;
             }
 
@@ -95,9 +109,10 @@ public class Blockchain {
     }
 
     public boolean isBlockChainValid() {
-        if (!isFirstBlockValid()) {
-            return false;
-        }
+//        if (!isFirstBlockValid()) {
+//            System.out.println("First block is not valid");
+//            return false;
+//        }
 
         for (int i = 1; i < blocks.size(); i++) {
             Block currentBlock = blocks.get(i);

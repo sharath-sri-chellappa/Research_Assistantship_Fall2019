@@ -33,5 +33,5 @@
         android:layout_height="100dp"
         android:layout_gravity="bottom|center_horizontal"
         android:scrollbars="vertical"
-        android:text="Enter your Previous Hash" />
+        android:text="" />
 </RelativeLayout>

@@ -1,4 +1,5 @@
 package com.example.blockchain_ticketing
+
 import android.content.Context
 import android.content.Intent
 import android.net.wifi.WifiManager
@@ -15,8 +16,7 @@ import com.android.volley.toolbox.Volley
 import com.example.blockchain_ticketing.barcode.BarcodeCaptureActivity
 import com.google.android.gms.common.api.CommonStatusCodes
 import com.google.android.gms.vision.barcode.Barcode
-import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.*
 import org.json.JSONException
 import org.json.JSONObject
 import java.net.Socket
@@ -26,7 +26,7 @@ class SecondActivity : AppCompatActivity() {
 
     private lateinit var mResultTextView: TextView
     private lateinit var database: DatabaseReference
-    val blockchain_kotlin_copy: Blockchain = MainActivity.blockchain
+    var blockchain_kotlin_copy: Blockchain = Blockchain(4)
     var listofips:ArrayList<String> = ArrayList()
 
     private val FCM_API = "https://fcm.googleapis.com/fcm/send"
@@ -62,6 +62,7 @@ class SecondActivity : AppCompatActivity() {
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        database = FirebaseDatabase.getInstance().reference
         super.onCreate(savedInstanceState)
         setContentView(R.layout.second_activity)
 
@@ -71,11 +72,26 @@ class SecondActivity : AppCompatActivity() {
             val intent = Intent(applicationContext, BarcodeCaptureActivity::class.java)
             startActivityForResult(intent, BARCODE_READER_REQUEST_CODE)
         }
+        val postListener  = object : ValueEventListener {
+            override fun onDataChange(dataSnapshot: DataSnapshot) {
+                Log.i("TAG", "Second Activity Blockchain Kotlin Copy")
+                println("Second Activity Blockchain Kotlin Copy");
+                val stuff = dataSnapshot.getValue(Test::class.java)
+                println(stuff!!.current_hash)
+                println(stuff!!.index)
+                val block = Block(stuff!!.index, stuff!!.timestamp, stuff!!.previous_hash, stuff!!.current_hash, stuff!!.data)
+                blockchain_kotlin_copy = Blockchain(4, mutableListOf(block))
+                println(blockchain_kotlin_copy)
+            }
+            override fun onCancelled(databaseError: DatabaseError) {
+                println("loadPost:onCancelled ${databaseError.toException()}")
+            }
+        }
+        database.child("blockchain").addValueEventListener(postListener)
         //FirebaseMessaging.getInstance().subscribeToTopic("/topics/blockchain")
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        database = FirebaseDatabase.getInstance().reference
         val s: Socket
         if (requestCode == BARCODE_READER_REQUEST_CODE) {
             if (resultCode == CommonStatusCodes.SUCCESS) {
@@ -84,30 +100,16 @@ class SecondActivity : AppCompatActivity() {
                     println(barcode.displayValue)
                     val ip = barcode.displayValue.split("|||")[0]
                     val barcode_real = barcode.displayValue.split("|||")[1]
-                    println(ip)
+                    println(blockchain_kotlin_copy.latestBlock().getIndex() + 1)
+                    println(barcode_real)
                     val block_to_be_added = Block(blockchain_kotlin_copy.latestBlock().getIndex() + 1, System.currentTimeMillis(), barcode_real, "Rogue Block")
+                    println("Block to be added is ")
                     println(block_to_be_added)
                     val tf = blockchain_kotlin_copy.addBlock(block_to_be_added)
                     println(blockchain_kotlin_copy)
                     val manager = getApplicationContext().getSystemService(Context.WIFI_SERVICE) as WifiManager
                     val info = manager.connectionInfo
                     val address = info.macAddress
-//                    FirebaseInstanceId.getInstance().instanceId
-//                            .addOnCompleteListener(OnCompleteListener { task ->
-//                                if (!task.isSuccessful) {
-//                                    Log.w(LOG_TAG, "getInstanceId failed", task.exception)
-//                                    return@OnCompleteListener
-//                                }
-//
-//                                // Get new Instance ID token
-//                                val token = task.result?.token
-//                                println("Token values are ")
-//                                println(token)
-////                                // Log and toast
-////                                val msg = getString(R.string.msg_token_fmt, token)
-////                                Log.d(TAG, msg)
-////                                Toast.makeText(baseContext, msg, Toast.LENGTH_SHORT).show()
-//                            })
                     println("tf = ${tf}")
                     if (tf == true) {
                         database.child("Latest Hash").setValue(block_to_be_added.getHash())
@@ -121,6 +123,7 @@ class SecondActivity : AppCompatActivity() {
 
                         try {
                             notificationBody.put("title", "BlockchainCopy")
+                            notificationBody.put("ip-address", ip)
                             notificationBody.put("message", blockchain_kotlin_copy)   //Enter your notification message
                             notification.put("to", topic)
                             notification.put("data", notificationBody)
@@ -128,6 +131,11 @@ class SecondActivity : AppCompatActivity() {
                         } catch (e: JSONException) {
                             Log.e("TAG", "onCreate: " + e.message)
                         }
+                        database.child("blockchain").child("index").setValue(blockchain_kotlin_copy.latestBlock().index);
+                        database.child("blockchain").child("current_hash").setValue(blockchain_kotlin_copy.latestBlock().hash);
+                        database.child("blockchain").child("previous_hash").setValue(blockchain_kotlin_copy.latestBlock().previousHash);
+                        database.child("blockchain").child("timestamp").setValue(blockchain_kotlin_copy.latestBlock().timestamp);
+                        database.child("blockchain").child("data").setValue(blockchain_kotlin_copy.latestBlock().data);
                         println(notification)
                         sendNotification(notification)
                     }

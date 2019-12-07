@@ -9,12 +9,12 @@ import java.util.Date;
 
 public class Block {
 
-    private int index;
-    private long timestamp;
-    private String hash;
-    private String previousHash;
-    private String data;
-    private int nonce;
+    public int index;
+    public long timestamp;
+    public String hash;
+    public String previousHash;
+    public String data;
+    public int nonce;
 
     public Block(int index, long timestamp, String previousHash, String data) {
         this.index = index;
@@ -23,6 +23,14 @@ public class Block {
         this.data = data;
         nonce = 0;
         hash = Block.calculateHash(this);
+    }
+
+    public Block(int index, long timestamp, String previousHash, String hash, String data) {
+        this.index = index;
+        this.timestamp = timestamp;
+        this.previousHash = previousHash;
+        this.data = data;
+        this.hash = hash;
     }
 
     public int getIndex() {
@@ -89,8 +97,6 @@ public class Block {
 
     public void mineBlock(int difficulty) {
         nonce = 0;
-
-
         while (!getHash().substring(0,  difficulty).equals(Utils.zeros(difficulty))) {
             nonce++;
             hash = Block.calculateHash(this);
